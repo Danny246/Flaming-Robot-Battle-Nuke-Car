@@ -1,6 +1,16 @@
+#include <NeoPixelAnimator.h>
+#include <NeoPixelBrightnessBus.h>
+#include <NeoPixelBus.h>
 
 #include <Servo.h> //servo library
 Servo myservo; // create servo object to control servo
+
+int pxCount = 24;
+int pxPin = 1;
+
+//y u no red??
+NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(pxCount,pxPin);
+
 
 //set pins for driving stuff
 int Echo = A4;  
@@ -290,9 +300,11 @@ void logic()
 void setup() 
 { 
   getReady();
+  strip.SetPixelColor(1,RgbColor(100,100,100));
 } 
 void loop() 
 { 
+    
     //servo does sweep
     sweep();
     //check if distances are too short
