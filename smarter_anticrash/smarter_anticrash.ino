@@ -1,6 +1,8 @@
 
 #include <Servo.h> //servo library
 Servo myservo; // create servo object to control servo
+
+//set pins for driving stuff
 int Echo = A4;  
 int Trig = A5; 
 int in1 = 6;
@@ -10,29 +12,36 @@ int in4 = 9;
 int ENA = 5;
 int ENB = 11;
 
+//speed out of 255
 int ABS = 100;
+//distance before it reacts
 int distInCM = 20;
+//optimising turn time
 int tTime = round(50000/ABS);
 
+//globals for making the servo sweep
 int servoPos = 0;
 boolean up = true;
-int distance[5];
 
+//store the distances in array
+int distance[5];
+//misc variables
+int backCount = 0;
 boolean obst[5];
 
-
-void _mForward()
+//car moves forward
+void mForward()
 {
  analogWrite(ENA,ABS);
- analogWrite(ENB,ABS-8);
+ analogWrite(ENB,ABS-7);
   digitalWrite(in1,HIGH);//digital output
   digitalWrite(in2,LOW);
   digitalWrite(in3,LOW);
   digitalWrite(in4,HIGH);
  Serial.println("go forward!");
 }
-
-void _mBack()
+//car reverses
+void mBack()
 {
  analogWrite(ENA,ABS);
  analogWrite(ENB,ABS);
@@ -42,8 +51,8 @@ void _mBack()
   digitalWrite(in4,LOW);
  Serial.println("go back!");
 }
-
-void _mleft()
+//car turns left
+void tLeft()
 {
  analogWrite(ENA,ABS+80);
  analogWrite(ENB,ABS+80);
@@ -53,8 +62,8 @@ void _mleft()
   digitalWrite(in4,LOW); 
  Serial.println("go left!");
 }
-
-void _mright()
+//car turns right
+void tRight()
 {
  analogWrite(ENA,ABS+80);
  analogWrite(ENB,ABS+80);
@@ -64,7 +73,7 @@ void _mright()
   digitalWrite(in4,HIGH);
  Serial.println("go right!");
 } 
-
+//car arks left
 void arkLeft()
 {
   analogWrite(ENA,ABS+80);
@@ -75,19 +84,19 @@ void arkLeft()
   digitalWrite(in4,HIGH);
  Serial.println("ark left!");
 }
-
+//car arks right
 void arkRight()
 {
   analogWrite(ENA,ABS-50);
-  analogWrite(ENB,ABS+72);
+  analogWrite(ENB,ABS+73);
   digitalWrite(in1,HIGH);
   digitalWrite(in2,LOW);
   digitalWrite(in3,LOW);
   digitalWrite(in4,HIGH);
   Serial.println("ark right!");
 }
-
-void _mStop()
+//stops car
+void stopCar()
 {
   analogWrite(ENA,ABS+80);
   analogWrite(ENB,ABS+80);
@@ -98,10 +107,10 @@ void _mStop()
   delay(100);
   analogWrite(ENA,0);
   analogWrite(ENB,0);
-  Serial.println("Stop!");
+  Serial.println("stopCar!");
 } 
- /*Ultrasonic distance measurement Sub function*/
-int Distance_test()   
+//tests distance
+int distTest()   
 {
   digitalWrite(Trig, LOW);   
   delayMicroseconds(2);
@@ -124,9 +133,9 @@ void checkSurroundings(int distance[])
       }
     }
 }
-
-void setup() 
-{ 
+//to get everything ready
+void getReady()
+{
   myservo.attach(3);// attach servo on pin 3 to servo object
   Serial.begin(9600);     
   pinMode(Echo, INPUT);    
@@ -137,21 +146,18 @@ void setup()
   pinMode(in4,OUTPUT);
   pinMode(ENA,OUTPUT);
   pinMode(ENB,OUTPUT);
-  _mStop();
+  stopCar();
 
   for (int i = 0; i<5; i++)
   {
    distance[i] = distInCM +3;
    obst[i] = false;
   }
-} 
-
-
-int backCount = 0;
-
-void loop() 
-{ 
-    for(int i = 0; i<89; i++)
+}
+//makes servo do a sweep and saves the distances
+void sweep()
+{
+  for(int i = 0; i<89; i++)
     {
       if(servoPos >= 178)
       {
@@ -172,49 +178,44 @@ void loop()
       
       switch (servoPos)
       {
-        case 0:distance[0] = Distance_test();
+        case 0:distance[0] = distTest();
         break;
-        case 44: distance[1] = Distance_test();
+        case 44: distance[1] = distTest();
         break;
-        case 90: distance[2] = Distance_test();
+        case 90: distance[2] = distTest();
         break;
-        case 134: distance[3] = Distance_test();
+        case 134: distance[3] = distTest();
         break;
-        case 178: distance[4] = Distance_test();
+        case 178: distance[4] = distTest();
         break;
       }
       myservo.write(servoPos);//setservo position
       delay(5);
       //Serial.println("servoPos is: "+String(servoPos));
     }
-    
-    //check if there are obsstacles
-    checkSurroundings(distance);
-
-    for (int i = 0; i<5; i++)
+}
+//does the logic for the cars movement
+void logic()
+{
+  if (obst[2])
     {
-    Serial.print(String(obst[i]));
-    }
-    
-    if (obst[2])
-    {
-      _mStop();
+      stopCar();
       obst[2] = false;
       if (!obst[0]&&!obst[1])
       {
         backCount=0;
         obst[3],obst[4] = false;
-        _mright();
+        tRight();
         delay(tTime);
-        _mForward();
+        mForward();
       }
       else if (!obst[3] && !obst[4])
       {
         backCount=0;
         obst[0],obst[1] = false;
-        _mleft();
+        tLeft();
         delay(tTime);
-        _mForward();
+        mForward();
       }
       else
       {
@@ -222,16 +223,16 @@ void loop()
         backCount++;
         if(backCount>=3)
         {
-          _mright();
+          tRight();
         delay(tTime);
-        _mForward();
+        mForward();
         backCount = 0;
         }
         else
         {
-        _mBack();
+        mBack();
         delay(800);
-        _mStop();
+        stopCar();
         }
       }
     }
@@ -240,18 +241,18 @@ void loop()
       backCount = 0;
       obst[1] = false;
       myservo.write(90);
-      int newD = Distance_test();
-      if(newD<= distInCM+50)
+      int newD = distTest();
+      if(newD<= distInCM+30)
       {
-        _mleft();
+        tLeft();
         delay(tTime);
-        _mForward();
+        mForward();
       }
       else
       {
         arkLeft();
         delay(800);
-        _mForward();
+        mForward();
       }
     }
     else if(obst[3])
@@ -259,29 +260,45 @@ void loop()
       backCount =0;
       obst[3] = false;
       myservo.write(90);
-      int newD = Distance_test();
-      if(newD<= distInCM+50)
+      int newD = distTest();
+      if(newD<= distInCM+30)
       {
-        _mright();
+        tRight();
         delay(tTime);
-        _mForward();
+        mForward();
       }
       else
       {
         arkRight();
         delay(800);
-        _mForward();
+        mForward();
       }
     }
     else
     {
       backCount=0;
-     _mForward();
+     mForward();
     }
 
     for (int i = 0; i<5; i++)
     {
     obst[i] = false;
     }
+}
+
+//main
+void setup() 
+{ 
+  getReady();
+} 
+void loop() 
+{ 
+    //servo does sweep
+    sweep();
+    //check if distances are too short
+    checkSurroundings(distance);
+    //performs the cars decisionmaking 
+    logic();
+    
 }
 
