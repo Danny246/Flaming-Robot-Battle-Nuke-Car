@@ -25,7 +25,7 @@ int ENB = 11;
 //speed out of 255
 int ABS = 100;
 //distance before it reacts
-int distInCM = 20;
+int distInCM = 40;
 //optimising turn time
 int tTime = round(50000/ABS);
 
@@ -124,19 +124,19 @@ void tRight()
 //car arks left
 void arkLeft()
 {
-  analogWrite(ENA,ABS+80);
- analogWrite(ENB,ABS-50);
+  analogWrite(ENA,ABS+100);
+  analogWrite(ENB,ABS-87);
   digitalWrite(in1,HIGH);
   digitalWrite(in2,LOW);
   digitalWrite(in3,LOW);
   digitalWrite(in4,HIGH);
- Serial.println("ark left!");
+  Serial.println("ark left!");
 }
 //car arks right
 void arkRight()
 {
-  analogWrite(ENA,ABS-50);
-  analogWrite(ENB,ABS+73);
+  analogWrite(ENA,ABS-80);
+  analogWrite(ENB,ABS+103);
   digitalWrite(in1,HIGH);
   digitalWrite(in2,LOW);
   digitalWrite(in3,LOW);
@@ -299,7 +299,7 @@ void logic()
       else
       {
         arkLeft();
-        delay(800);
+        delay(400);
         mForward();
       }
     }
@@ -318,14 +318,33 @@ void logic()
       else
       {
         arkRight();
-        delay(800);
+        delay(400);
         mForward();
       }
     }
     else
     {
       backCount=0;
-     mForward();
+      if(random(0,40) == 7)
+      {
+        mBack();
+        delay(800);
+        if(random(0,2) == 1)
+        {
+          tLeft();
+        }
+        else
+        {
+          tRight();
+        }
+        delay(tTime);
+        mForward();
+      }
+      else
+      {
+        mForward();
+      }
+      
     }
 
     for (int i = 0; i<5; i++)
