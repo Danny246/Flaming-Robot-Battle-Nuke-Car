@@ -5,12 +5,12 @@
 #include <Servo.h> //servo library
 Servo myservo; // create servo object to control servo
 
-int pxCount = 24;
-int pxPin = 1;
+#define colorSaturation 128
+const uint16_t pixelCount = 24;
+const uint8_t pixelPin = 2;
+int pixelBrightness = 20; //scale from 0 to 128
 
-//y u no red??
-NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(pxCount,pxPin);
-
+NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(pixelCount,pixelPin);
 
 //set pins for driving stuff
 int Echo = A4;  
@@ -38,6 +38,44 @@ int distance[5];
 //misc variables
 int backCount = 0;
 boolean obst[5];
+
+
+//main
+void setup() 
+{ 
+  getReady();
+  strip.Begin();
+  strip.ClearTo(RgbColor(120,120,0));
+  strip.Show();
+} 
+void loop() 
+{   
+  //lights flash randomly
+
+    for (int i = 0; i<pixelCount; i++)
+    {
+       strip.Begin();
+       int rand1 = random(0,3);
+       switch(rand1)
+       {
+        case 0: strip.SetPixelColor(i, RgbColor(0,random(0,pixelBrightness),random(0,pixelBrightness)));
+        break;
+        case 1: strip.SetPixelColor(i, RgbColor(random(0,pixelBrightness),0,random(0,pixelBrightness)));
+        break;
+        case 2: strip.SetPixelColor(i, RgbColor(random(0,pixelBrightness),random(0,pixelBrightness),0));
+        break;
+       }
+       strip.Show();
+    }
+    //servo does sweep
+    sweep();
+    //check if distances are too short
+    checkSurroundings(distance);
+    //performs the cars decisionmaking 
+    logic();
+    
+}
+
 
 //car moves forward
 void mForward()
@@ -296,21 +334,5 @@ void logic()
     }
 }
 
-//main
-void setup() 
-{ 
-  getReady();
-  strip.SetPixelColor(1,RgbColor(100,100,100));
-} 
-void loop() 
-{ 
-    
-    //servo does sweep
-    sweep();
-    //check if distances are too short
-    checkSurroundings(distance);
-    //performs the cars decisionmaking 
-    logic();
-    
-}
+
 
